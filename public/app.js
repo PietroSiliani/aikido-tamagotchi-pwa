@@ -11,6 +11,28 @@ async function loadGame() {
         const build_url = data.url
 
         var iframe = document.createElement('iframe');
+
+        iframe.id = "game";
+        iframe.title = "Aikigotchi";
+
+        iframe.src = build_url + "#installed";
+
+        iframe.style.position = "fixed";
+        iframe.style.inset = "0";
+        iframe.style.width = "100%";
+        iframe.style.height = "100%";
+        iframe.style.border = "none";
+        iframe.style.display = "block";
+
+        iframe.setAttribute("allowfullscreen", "");
+        iframe.setAttribute("frameborder", "0");
+        iframe.setAttribute("scrolling", "no");
+
+        iframe.setAttribute(
+            "allow",
+            "autoplay; fullscreen; gamepad"
+        );
+
         iframe.setAttribute('allowtransparency', 'true');
         iframe.setAttribute('webkitallowfullscreen', 'true');
         iframe.setAttribute('mozallowfullscreen', 'true');
