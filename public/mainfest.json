@@ -2,7 +2,7 @@
   "name": "Aikigotchi",
   "short_name": "Aikigotchi",
   "start_url": "./",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait",
   "icons": [
     {
