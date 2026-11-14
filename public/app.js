@@ -47,12 +47,12 @@ window.addEventListener("message", (e) => {
     if (typeof data !== "object" || data === null) return;
 
     if (data.gameReady) {
+
         const storageDict = {};
         for (const [k, v] of Object.entries(localStorage)) {
             if (k.startsWith(PREFIX)) storageDict[k] = v;
         }
-        e.source.postMessage({ localStorage: storageDict }, gameOrigin);
-        return;
+        e.source.postMessage({ wrapper: "aikigotchi", localStorage: storageDict }, gameOrigin); return;
     }
 
     else if (data.localStorage) {
