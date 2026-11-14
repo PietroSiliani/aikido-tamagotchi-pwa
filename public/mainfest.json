@@ -1,6 +1,6 @@
 {
-  "name": "Aikido Tamagotchi",
-  "short_name": "Aikido Pet",
+  "name": "Aikigotchi",
+  "short_name": "Aikigotchi",
   "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
