@@ -63,4 +63,17 @@ window.addEventListener("message", (e) => {
     }
 });
 
+const dbg = document.createElement("pre");
+dbg.style.cssText = "position:fixed;top:0;left:0;z-index:9999;margin:0;padding:4px;font:10px monospace;color:#0f0;background:rgba(0,0,0,.6);max-width:100%;pointer-events:none;white-space:pre-wrap";
+document.body.appendChild(dbg);
+const log = (m) => { dbg.textContent = (m + "\n" + dbg.textContent).slice(0, 800); };
+
+window.addEventListener("message", (e) => {
+    const g = document.getElementById("game");
+    const d = e.data;
+    log(`msg origin=${e.origin} fromGame=${!!g && e.source === g.contentWindow} ` +
+        `type=${d && typeof d === "object" ? Object.keys(d).join(",") : typeof d} ` +
+        `keys=${Object.keys(localStorage).filter(k => k.startsWith(PREFIX)).join(",")}`);
+}, true);   // capture phase, so it logs even when the main listener returns early
+
 loadGame();
