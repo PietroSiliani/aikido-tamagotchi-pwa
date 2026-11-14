@@ -43,10 +43,7 @@ export async function onRequest(context) {
             );
         }
 
-        const build = uploads.uploads[0].build;
-
-        const buildURL =
-            `https://html-classic.itch.zone/html/${build.upload_id}-${build.id}/index.html`;
+        const buildURL = `https://html-classic.itch.zone/html/${upload.id}/index.html`;
 
         return new Response(
             JSON.stringify({ url: buildURL }),
