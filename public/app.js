@@ -63,17 +63,23 @@ window.addEventListener("message", (e) => {
     }
 });
 
+const APP_VERSION = "dbg-3";
+
 const dbg = document.createElement("pre");
-dbg.style.cssText = "position:fixed;top:0;left:0;z-index:9999;margin:0;padding:4px;font:10px monospace;color:#0f0;background:rgba(0,0,0,.6);max-width:100%;pointer-events:none;white-space:pre-wrap";
-document.body.appendChild(dbg);
-const log = (m) => { dbg.textContent = (m + "\n" + dbg.textContent).slice(0, 800); };
+dbg.style.cssText = "position:fixed;left:0;right:0;bottom:0;z-index:2147483647;margin:0;padding:6px;" +
+    "font:12px/1.3 monospace;color:#000;background:#0f0;max-height:40vh;overflow:hidden;" +
+    "pointer-events:none;white-space:pre-wrap;word-break:break-all";
+(document.body || document.documentElement).appendChild(dbg);
+const log = (m) => { dbg.textContent = (new Date().toLocaleTimeString() + " " + m + "\n" + dbg.textContent).slice(0, 1500); };
+
+log(`app.js ${APP_VERSION} running, standalone=${navigator.standalone === true}, hash="${location.hash}"`);
 
 window.addEventListener("message", (e) => {
     const g = document.getElementById("game");
     const d = e.data;
     log(`msg origin=${e.origin} fromGame=${!!g && e.source === g.contentWindow} ` +
         `type=${d && typeof d === "object" ? Object.keys(d).join(",") : typeof d} ` +
-        `keys=${Object.keys(localStorage).filter(k => k.startsWith(PREFIX)).join(",")}`);
-}, true);   // capture phase, so it logs even when the main listener returns early
+        `saved=${Object.keys(localStorage).filter(k => k.startsWith(PREFIX)).join(",") || "none"}`);
+}, true);
 
 loadGame();
