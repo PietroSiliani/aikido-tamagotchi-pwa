@@ -22,7 +22,7 @@ export async function onRequest(context) {
         if (!response.ok) {
             return new Response(
                 JSON.stringify({
-                    error: `Errore itch.io: ${response.status}`
+                    error: `itch.io API error: ${response.status}`
                 }),
                 {
                     status: response.status,
@@ -44,18 +44,11 @@ export async function onRequest(context) {
         }
 
         const uploadId = uploads.uploads[0].id
-        const buildURL = `https://html-classic.itch.zone/html/${uploadId}/index.html`;
+        const embedURL = `https://itch.io/embed-upload/${uploadId}?color=333333`;
 
-        return new Response(
-            JSON.stringify({ url: buildURL }),
-            {
-                status: 200,
-                headers: {
-                    "Content-Type": "application/json",
-                    "Cache-Control": "no-store"
-                }
-            }
-        );
+        return Response.json({
+            url: embedURL
+        });
 
     } catch (error) {
         return new Response(
