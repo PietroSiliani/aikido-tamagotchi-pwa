@@ -58,7 +58,7 @@ export async function onRequest(context) {
 
     } catch (error) {
         return new Response(
-            JSON.stringify({ "msg": error }),
+            JSON.stringify({ "msg": `${error}` }),
             {
                 status: 500,
                 headers: { "Content-Type": "application/json" }
