@@ -7,6 +7,8 @@ async function loadGame() {
         if (!response.ok) throw new Error("Unable to load game URL");
 
         const { url: buildUrl } = await response.json();
+
+        log("iframe src=" + buildUrl + "#installed");
         gameOrigin = new URL(buildUrl).origin;
 
         const iframe = document.createElement("iframe");
