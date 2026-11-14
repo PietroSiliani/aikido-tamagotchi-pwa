@@ -39,28 +39,27 @@ async function loadGame() {
     }
 }
 
+const GAME_ORIGIN = "https://html-classic.itch.zone";
+
 window.addEventListener("message", (e) => {
-    const game = document.getElementById("game");
-    if (!game || e.source !== game.contentWindow) return;   // ignore anything not from the game
+    if (e.origin !== GAME_ORIGIN) return;   // only the Itch game frame
 
     const data = e.data;
     if (typeof data !== "object" || data === null) return;
 
     if (data.gameReady) {
-
         const storageDict = {};
         for (const [k, v] of Object.entries(localStorage)) {
             if (k.startsWith(PREFIX)) storageDict[k] = v;
         }
-        e.source.postMessage({ wrapper: "aikigotchi", localStorage: storageDict }, gameOrigin); return;
+        e.source.postMessage({ wrapper: "aikigotchi", localStorage: storageDict }, e.origin);
+        return;
     }
-
-    else if (data.localStorage) {
+    if (data.localStorage) {
         for (const [k, v] of Object.entries(data.localStorage)) {
-            localStorage.setItem(k, v);
+            if (k.startsWith(PREFIX)) localStorage.setItem(k, v);
         }
-    }
-    else if (typeof data.localStorageRemove === "string") {
+    } else if (typeof data.localStorageRemove === "string" && data.localStorageRemove.startsWith(PREFIX)) {
         localStorage.removeItem(data.localStorageRemove);
     }
 });
