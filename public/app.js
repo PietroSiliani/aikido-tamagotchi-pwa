@@ -42,10 +42,10 @@ async function loadGame() {
 const GAME_ORIGIN = "https://html-classic.itch.zone";
 
 window.addEventListener("message", (e) => {
-    if (e.origin !== GAME_ORIGIN) return;   // only the Itch game frame
+    if (e.origin !== GAME_ORIGIN) { log(`REJECT origin=${e.origin}`); return; }
 
     const data = e.data;
-    if (typeof data !== "object" || data === null) return;
+    if (typeof data !== "object" || data === null) { log(`REJECT not-object: ${typeof data}`); return; }
 
     if (data.gameReady) {
         const storageDict = {};
@@ -53,14 +53,20 @@ window.addEventListener("message", (e) => {
             if (k.startsWith(PREFIX)) storageDict[k] = v;
         }
         e.source.postMessage({ wrapper: "aikigotchi", localStorage: storageDict }, e.origin);
+        log(`REPLIED to gameReady with ${Object.keys(storageDict).length} keys`);
         return;
     }
     if (data.localStorage) {
+        const keys = Object.keys(data.localStorage);
+        log(`SYNC keys=${keys.join(",") || "(empty object)"}`);
         for (const [k, v] of Object.entries(data.localStorage)) {
             if (k.startsWith(PREFIX)) localStorage.setItem(k, v);
         }
-    } else if (typeof data.localStorageRemove === "string" && data.localStorageRemove.startsWith(PREFIX)) {
-        localStorage.removeItem(data.localStorageRemove);
+    } else if (typeof data.localStorageRemove === "string") {
+        log(`REMOVE ${data.localStorageRemove}`);
+        if (data.localStorageRemove.startsWith(PREFIX)) localStorage.removeItem(data.localStorageRemove);
+    } else {
+        log(`IGNORED keys=${Object.keys(data).join(",")}`);
     }
 });
 
