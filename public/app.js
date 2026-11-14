@@ -23,13 +23,13 @@ async function loadGame() {
         iframe.setAttribute("scrolling", "no");
         iframe.setAttribute("allow", "autoplay; fullscreen *; gamepad; gyroscope; accelerometer; web-share");
 
-        iframe.onload = () => {
-            const storageDict = {};
-            for (const [k, v] of Object.entries(localStorage)) {
-                if (k.startsWith(PREFIX)) storageDict[k] = v;
-            }
-            iframe.contentWindow.postMessage({ localStorage: storageDict }, gameOrigin);
-        };
+        // iframe.onload = () => {
+        //     const storageDict = {};
+        //     for (const [k, v] of Object.entries(localStorage)) {
+        //         if (k.startsWith(PREFIX)) storageDict[k] = v;
+        //     }
+        //     iframe.contentWindow.postMessage({ localStorage: storageDict }, gameOrigin);
+        // };
         document.body.appendChild(iframe);
     } catch (error) {
         console.error(error);
@@ -44,12 +44,21 @@ window.addEventListener("message", (e) => {
     const data = e.data;
     if (typeof data !== "object" || data === null) return;
 
-    if (data.localStorage) {
+    if (data.gameReady) {
+        const storageDict = {};
+        for (const [k, v] of Object.entries(localStorage)) {
+            if (k.startsWith(PREFIX)) storageDict[k] = v;
+        }
+        e.source.postMessage({ localStorage: storageDict }, gameOrigin);
+        return;
+    }
+
+    else if (data.localStorage) {
         for (const [k, v] of Object.entries(data.localStorage)) {
             localStorage.setItem(k, v);
         }
     }
-    if (typeof data.localStorageRemove === "string") {
+    else if (typeof data.localStorageRemove === "string") {
         localStorage.removeItem(data.localStorageRemove);
     }
 });
