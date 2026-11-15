@@ -7,10 +7,11 @@ let gameOrigin = null;
 
 async function loadGame() {
     try {
-        const response = await fetch("/api/latest-build");
+        const response = await fetch("/api/latest-build", { cache: "no-store" });
         if (!response.ok) throw new Error("Unable to load game URL");
 
         const { url: buildUrl } = await response.json();
+
 
         // log("iframe src=" + buildUrl + "#installed");
         gameOrigin = new URL(buildUrl).origin;
