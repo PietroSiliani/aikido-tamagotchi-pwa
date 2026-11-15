@@ -1,4 +1,8 @@
 const PREFIX = "Aikigotchi_";
+const DB_NAME = "aikigotchi-wrapper", STORE = "kv";
+const GAME_ORIGIN = "https://html-classic.itch.zone";
+
+
 let gameOrigin = null;
 
 async function loadGame() {
@@ -39,42 +43,79 @@ async function loadGame() {
     }
 }
 
-const GAME_ORIGIN = "https://html-classic.itch.zone";
+let dbPromise = null;
+function idb() {
+    if (!dbPromise) dbPromise = new Promise((resolve, reject) => {
+        const r = indexedDB.open(DB_NAME, 1);
+        r.onupgradeneeded = () => r.result.createObjectStore(STORE);
+        r.onsuccess = () => resolve(r.result);
+        r.onerror = () => reject(r.error);
+    });
+    return dbPromise;
+}
+async function idbPut(k, v) {
+    const db = await idb();
+    return new Promise((res, rej) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(v, k);
+        tx.oncomplete = res; tx.onerror = tx.onabort = () => rej(tx.error);
+    });
+}
+async function idbDelete(k) {
+    const db = await idb();
+    return new Promise((res, rej) => {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).delete(k);
+        tx.oncomplete = res; tx.onerror = tx.onabort = () => rej(tx.error);
+    });
+}
+async function idbGetAll() {
+    const db = await idb();
+    return new Promise((resolve, reject) => {
+        const out = {};
+        const req = db.transaction(STORE, "readonly").objectStore(STORE).openCursor();
+        req.onsuccess = () => {
+            const c = req.result;
+            if (c) { if (String(c.key).startsWith(PREFIX)) out[c.key] = c.value; c.continue(); }
+            else resolve(out);
+        };
+        req.onerror = () => reject(req.error);
+    });
+}
 
-window.addEventListener("message", (e) => {
-    if (e.origin !== GAME_ORIGIN) {
-        // log(`REJECT origin=${e.origin}`); 
-        return;
-    }
+// One-time migration of existing localStorage saves
+const migrated = (async () => {
+    try {
+        for (const k of Object.keys(localStorage)) {
+            if (!k.startsWith(PREFIX)) continue;
+            const existing = await idbGetAll();
+            if (existing[k] === undefined) await idbPut(k, localStorage.getItem(k));
+            localStorage.removeItem(k);
+        }
+    } catch (e) { console.error("migration failed", e); }
+})();
 
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => { });
+
+window.addEventListener("message", async (e) => {
+    if (e.origin !== GAME_ORIGIN) return;
     const data = e.data;
-    if (typeof data !== "object" || data === null) {
-        // log(`REJECT not-object: ${typeof data}`); 
-        return;
-    }
+    if (typeof data !== "object" || data === null) return;
 
-    if (data.gameReady) {
-        const storageDict = {};
-        for (const [k, v] of Object.entries(localStorage)) {
-            if (k.startsWith(PREFIX)) storageDict[k] = v;
+    try {
+        if (data.gameReady) {
+            await migrated;
+            const dict = await idbGetAll();
+            e.source.postMessage({ wrapper: "aikigotchi", localStorage: dict }, e.origin);
+        } else if (data.localStorage) {
+            for (const [k, v] of Object.entries(data.localStorage))
+                if (k.startsWith(PREFIX)) await idbPut(k, v);
+        } else if (typeof data.localStorageRemove === "string" && data.localStorageRemove.startsWith(PREFIX)) {
+            await idbDelete(data.localStorageRemove);
         }
-        e.source.postMessage({ wrapper: "aikigotchi", localStorage: storageDict }, e.origin);
-        // log(`REPLIED to gameReady with ${Object.keys(storageDict).length} keys`);
-        return;
+    } catch (err) {
+        console.error("[wrapper] storage error", err);
     }
-    if (data.localStorage) {
-        const keys = Object.keys(data.localStorage);
-        // log(`SYNC keys=${keys.join(",") || "(empty object)"}`);
-        for (const [k, v] of Object.entries(data.localStorage)) {
-            if (k.startsWith(PREFIX)) localStorage.setItem(k, v);
-        }
-    } else if (typeof data.localStorageRemove === "string") {
-        // log(`REMOVE ${data.localStorageRemove}`);
-        if (data.localStorageRemove.startsWith(PREFIX)) localStorage.removeItem(data.localStorageRemove);
-    }
-    // else {
-    //     log(`IGNORED keys=${Object.keys(data).join(",")}`);
-    // }
 });
 
 // const APP_VERSION = "dbg-3";
