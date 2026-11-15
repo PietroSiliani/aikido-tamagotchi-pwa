@@ -17,6 +17,7 @@ async function loadGame() {
 
         const iframe = document.createElement("iframe");
         iframe.id = "game";
+        iframe.name = "aikigotchi-wrapper";
         iframe.title = "Aikigotchi";
         iframe.src = buildUrl + "#installed";
         iframe.style.cssText = "position:fixed;inset:0;width:100%;height:100%;border:none;display:block;";
