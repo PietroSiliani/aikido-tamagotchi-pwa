@@ -102,19 +102,30 @@ window.addEventListener("message", async (e) => {
     const data = e.data;
     if (typeof data !== "object" || data === null) return;
 
+    const reply = (ok, err) => {
+        if (data.id === undefined) return;
+        e.source.postMessage(
+            { wrapper: "aikigotchi", ack: { id: data.id, ok, error: ok ? "" : String((err && err.message) || err) } },
+            e.origin
+        );
+    };
+
     try {
         if (data.gameReady) {
             await migrated;
             const dict = await idbGetAll();
-            e.source.postMessage({ wrapper: "aikigotchi", localStorage: dict }, e.origin);
+            e.source.postMessage({ wrapper: "aikigotchi", localStorage: dict, acks: true }, e.origin);
         } else if (data.localStorage) {
             for (const [k, v] of Object.entries(data.localStorage))
                 if (k.startsWith(PREFIX)) await idbPut(k, v);
+            reply(true);
         } else if (typeof data.localStorageRemove === "string" && data.localStorageRemove.startsWith(PREFIX)) {
             await idbDelete(data.localStorageRemove);
+            reply(true);
         }
     } catch (err) {
         console.error("[wrapper] storage error", err);
+        reply(false, err);
     }
 });
 
